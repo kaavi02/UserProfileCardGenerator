@@ -46,9 +46,3 @@ A form-based web application built with Node.js, Express, EJS, and SQLite. Featu
    http://localhost:3000
    ```
 
-## Deploying to Vercel
-
-1. Push your repository to GitHub.
-2. Sign in to [Vercel](https://vercel.com).
-3. Click **Add New Project** and import `UserProfileCardGenerator`.
-4. Leave the default build settings and click **Deploy**.
