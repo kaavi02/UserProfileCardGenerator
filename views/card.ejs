@@ -90,22 +90,17 @@
     <p>User Profile Card Generator &bull; Server-side form processing and dynamic rendering</p>
   </footer>
 
+  <script type="application/json" id="profileData">
+    <%- JSON.stringify(profile) %>
+  </script>
+
   <script>
-    const savedCardData = {
-      id: <%= profile.id %>,
-      name: <%- JSON.stringify(profile.name) %>,
-      email: <%- JSON.stringify(profile.email || '') %>,
-      bio: <%- JSON.stringify(profile.bio) %>,
-      skills: <%- JSON.stringify(profile.skills) %>,
-      github: <%- JSON.stringify(profile.github || '') %>,
-      linkedin: <%- JSON.stringify(profile.linkedin || '') %>,
-      portfolio: <%- JSON.stringify(profile.portfolio || '') %>,
-      avatar: <%- JSON.stringify(profile.avatar) %>
-    };
+    const profileJsonElement = document.getElementById('profileData');
+    const savedCardData = JSON.parse(profileJsonElement.textContent);
 
     try {
       let storedList = JSON.parse(localStorage.getItem('stored_user_profiles') || '[]');
-      storedList = storedList.filter(item => {
+      storedList = storedList.filter(function(item) {
         if (savedCardData.email && item.email === savedCardData.email) return false;
         return item.id !== savedCardData.id;
       });
@@ -129,15 +124,15 @@
 
     function convertImageToBase64(imgElement) {
       return fetch(imgElement.src)
-        .then(res => res.blob())
-        .then(blob => {
-          return new Promise(resolve => {
+        .then(function(res) { return res.blob(); })
+        .then(function(blob) {
+          return new Promise(function(resolve) {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
+            reader.onloadend = function() { resolve(reader.result); };
             reader.readAsDataURL(blob);
           });
         })
-        .catch(() => imgElement.src);
+        .catch(function() { return imgElement.src; });
     }
 
     async function downloadProfileCard() {
@@ -164,7 +159,8 @@
           avatarImg.src = originalSrc;
         }
         const link = document.createElement('a');
-        link.download = '<%= profile.name.toLowerCase().replace(/\\s+/g, "-") %>-card.png';
+        const cleanName = (savedCardData.name || 'profile').toLowerCase().replace(/\s+/g, '-');
+        link.download = cleanName + '-card.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
         btn.innerText = originalText;
