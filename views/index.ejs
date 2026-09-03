@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Profile Card Generator</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
   <header class="navbar">
@@ -21,15 +22,15 @@
   <main class="main-container">
     <section class="hero">
       <h1 class="hero-title">User Profile Card Generator</h1>
-      <p class="hero-subtitle">Enter your personal details to generate and store a dynamic server-rendered profile card with custom avatar.</p>
+      <p class="hero-subtitle">Enter your details on the left to see your dynamic profile card render in real time. Save to database or download as an image.</p>
     </section>
 
     <div class="grid-layout">
       <div class="form-card">
-        <form action="/generate" method="POST">
+        <form action="/generate" method="POST" id="profileForm">
           <div class="form-group">
             <label for="name" class="form-label">Full Name</label>
-            <input type="text" id="name" name="name" class="form-input" placeholder="e.g. Jane Doe" required>
+            <input type="text" id="name" name="name" class="form-input" placeholder="e.g. Jane Doe" required autocomplete="off">
           </div>
 
           <div class="form-group">
@@ -39,16 +40,23 @@
 
           <div class="form-group">
             <label for="skills" class="form-label">Skills (comma-separated)</label>
-            <input type="text" id="skills" name="skills" class="form-input" placeholder="e.g. JavaScript, React, Node.js, UI Design" required>
-            <div class="form-help">Separate each skill with a comma to render badges</div>
+            <input type="text" id="skills" name="skills" class="form-input" placeholder="e.g. JavaScript, React, Node.js, UI Design" required autocomplete="off">
+            <div class="form-help">Separate each skill with a comma to render badges in real time</div>
           </div>
 
           <div class="form-group">
             <label for="avatarStyle" class="form-label">Avatar Style</label>
             <select id="avatarStyle" name="avatarStyle" class="form-select">
-              <option value="bottts">Robot (Bottts)</option>
+              <option value="bottts">Robots (Bottts)</option>
               <option value="avataaars">Friendly Avatars</option>
               <option value="lorelei">Artistic (Lorelei)</option>
+              <option value="adventurer">Adventurer RPG</option>
+              <option value="pixel-art">Pixel Art Characters</option>
+              <option value="fun-emoji">Fun Emoji</option>
+              <option value="notionists">Notion Sketch</option>
+              <option value="croodles">Hand Doodles</option>
+              <option value="micah">Modern Minimalist</option>
+              <option value="thumbs">Thumbs Expressions</option>
               <option value="initials">Initials Badge</option>
             </select>
           </div>
@@ -56,44 +64,182 @@
           <div class="form-group">
             <label class="form-label">Social & Web Links</label>
             <div class="social-inputs-grid">
-              <input type="text" id="github" name="github" class="form-input" placeholder="GitHub username or URL">
-              <input type="text" id="linkedin" name="linkedin" class="form-input" placeholder="LinkedIn profile URL">
+              <input type="text" id="github" name="github" class="form-input" placeholder="GitHub username or link" autocomplete="off">
+              <input type="text" id="linkedin" name="linkedin" class="form-input" placeholder="LinkedIn username or link" autocomplete="off">
             </div>
             <div style="margin-top: 0.8rem;">
-              <input type="text" id="portfolio" name="portfolio" class="form-input" placeholder="Portfolio or website link">
+              <input type="text" id="portfolio" name="portfolio" class="form-input" placeholder="Portfolio or website link" autocomplete="off">
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary">Generate Profile Card</button>
+          <button type="submit" class="btn btn-primary">Save & Generate Server Card</button>
         </form>
       </div>
 
-      <aside class="side-panel">
-        <h2 class="side-title">Recent Profiles</h2>
-        <% if (recentProfiles && recentProfiles.length > 0) { %>
-          <div class="mini-profile-list">
-            <% recentProfiles.forEach(function(item) { %>
-              <a href="/profile/<%= item.id %>" class="mini-card">
-                <img src="<%= item.avatar %>" alt="<%= item.name %>" class="mini-avatar">
-                <div class="mini-info">
-                  <h4><%= item.name %></h4>
-                  <p><%= item.bio %></p>
-                </div>
-              </a>
-            <% }); %>
+      <div class="preview-container">
+        <div class="preview-header">
+          <div class="preview-badge">
+            <span class="pulse-dot"></span>
+            <span>Live Dynamic Preview</span>
           </div>
-        <% } else { %>
-          <p style="color: #64748b; font-size: 0.9rem;">No profiles created yet. Fill the form to create the first one!</p>
-        <% } %>
-        <div style="margin-top: 1.5rem;">
-          <a href="/profiles" class="btn btn-outline" style="width: 100%; text-align: center;">View All Profiles</a>
+          <button type="button" id="downloadPreviewBtn" class="btn btn-download" style="padding: 0.45rem 0.9rem; font-size: 0.85rem;" onclick="downloadCard('previewCard', 'my-profile-card')">
+            Download PNG
+          </button>
         </div>
-      </aside>
+
+        <div id="previewCard" class="profile-card">
+          <div class="card-banner"></div>
+          <div class="card-body">
+            <div class="avatar-container">
+              <img id="previewAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=preview" alt="Avatar Preview" class="card-avatar" crossorigin="anonymous">
+            </div>
+            
+            <h2 id="previewName" class="card-name">Your Name</h2>
+            <p id="previewBio" class="card-bio">Your bio and tagline will dynamically display here as you type.</p>
+
+            <div class="section-label">Skills & Expertise</div>
+            <div id="previewSkills" class="skills-wrapper">
+              <span class="skill-tag">JavaScript</span>
+              <span class="skill-tag">Design</span>
+            </div>
+
+            <div class="section-label">Connect</div>
+            <div id="previewSocials" class="social-links">
+              <span id="previewGithub" class="social-btn" style="display: none;">GitHub</span>
+              <span id="previewLinkedin" class="social-btn" style="display: none;">LinkedIn</span>
+              <span id="previewPortfolio" class="social-btn" style="display: none;">Portfolio</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-panel">
+          <h3 class="side-title">Recent Profiles</h3>
+          <% if (recentProfiles && recentProfiles.length > 0) { %>
+            <div class="mini-profile-list">
+              <% recentProfiles.forEach(function(item) { %>
+                <a href="/profile/<%= item.id %>" class="mini-card">
+                  <img src="<%= item.avatar %>" alt="<%= item.name %>" class="mini-avatar">
+                  <div class="mini-info">
+                    <h4><%= item.name %></h4>
+                    <p><%= item.bio %></p>
+                  </div>
+                </a>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p style="color: #64748b; font-size: 0.85rem;">No saved profiles yet.</p>
+          <% } %>
+          <div style="margin-top: 1rem;">
+            <a href="/profiles" class="btn btn-outline" style="width: 100%; text-align: center; font-size: 0.88rem; padding: 0.5rem 1rem;">View All Stored Cards</a>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
   <footer class="footer">
-    <p>User Profile Card Generator &bull; Server-side form processing and dynamic rendering</p>
+    <p>User Profile Card Generator &bull; Dynamic real-time preview, server-side processing, and database storage</p>
   </footer>
+
+  <script>
+    const nameInput = document.getElementById('name');
+    const bioInput = document.getElementById('bio');
+    const skillsInput = document.getElementById('skills');
+    const avatarSelect = document.getElementById('avatarStyle');
+    const githubInput = document.getElementById('github');
+    const linkedinInput = document.getElementById('linkedin');
+    const portfolioInput = document.getElementById('portfolio');
+
+    const previewName = document.getElementById('previewName');
+    const previewBio = document.getElementById('previewBio');
+    const previewSkills = document.getElementById('previewSkills');
+    const previewAvatar = document.getElementById('previewAvatar');
+    const previewGithub = document.getElementById('previewGithub');
+    const previewLinkedin = document.getElementById('previewLinkedin');
+    const previewPortfolio = document.getElementById('previewPortfolio');
+
+    function updateLivePreview() {
+      const nameValue = nameInput.value.trim();
+      const bioValue = bioInput.value.trim();
+      const skillsValue = skillsInput.value.trim();
+      const styleValue = avatarSelect.value;
+      const githubValue = githubInput.value.trim();
+      const linkedinValue = linkedinInput.value.trim();
+      const portfolioValue = portfolioInput.value.trim();
+
+      if (nameValue) {
+        const titleCased = nameValue
+          .toLowerCase()
+          .split(' ')
+          .filter(Boolean)
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        previewName.textContent = titleCased;
+      } else {
+        previewName.textContent = 'Your Name';
+      }
+
+      previewBio.textContent = bioValue || 'Your bio and tagline will dynamically display here as you type.';
+
+      const seed = encodeURIComponent(nameValue || 'preview');
+      if (styleValue === 'initials') {
+        previewAvatar.src = 'https://ui-avatars.com/api/?name=' + seed + '&background=6366f1&color=ffffff&bold=true&size=256';
+      } else {
+        previewAvatar.src = 'https://api.dicebear.com/7.x/' + styleValue + '/svg?seed=' + seed;
+      }
+
+      previewSkills.innerHTML = '';
+      if (skillsValue) {
+        const skillArray = skillsValue.split(',').map(s => s.trim()).filter(Boolean);
+        if (skillArray.length > 0) {
+          skillArray.forEach(skill => {
+            const span = document.createElement('span');
+            span.className = 'skill-tag';
+            span.textContent = skill;
+            previewSkills.appendChild(span);
+          });
+        } else {
+          previewSkills.innerHTML = '<span class="skill-tag">Skill Badge</span>';
+        }
+      } else {
+        previewSkills.innerHTML = '<span class="skill-tag">JavaScript</span><span class="skill-tag">Design</span>';
+      }
+
+      previewGithub.style.display = githubValue ? 'inline-flex' : 'none';
+      previewLinkedin.style.display = linkedinValue ? 'inline-flex' : 'none';
+      previewPortfolio.style.display = portfolioValue ? 'inline-flex' : 'none';
+    }
+
+    nameInput.addEventListener('input', updateLivePreview);
+    bioInput.addEventListener('input', updateLivePreview);
+    skillsInput.addEventListener('input', updateLivePreview);
+    avatarSelect.addEventListener('change', updateLivePreview);
+    githubInput.addEventListener('input', updateLivePreview);
+    linkedinInput.addEventListener('input', updateLivePreview);
+    portfolioInput.addEventListener('input', updateLivePreview);
+
+    function downloadCard(elementId, defaultFileName) {
+      const cardElement = document.getElementById(elementId);
+      const downloadBtn = document.getElementById('downloadPreviewBtn');
+      const originalText = downloadBtn.innerText;
+      downloadBtn.innerText = 'Exporting...';
+
+      html2canvas(cardElement, {
+        useCORS: true,
+        allowTaint: true,
+        scale: 2,
+        backgroundColor: null
+      }).then(function(canvas) {
+        const imageLink = document.createElement('a');
+        imageLink.download = (defaultFileName || 'profile-card') + '.png';
+        imageLink.href = canvas.toDataURL('image/png');
+        imageLink.click();
+        downloadBtn.innerText = originalText;
+      }).catch(function() {
+        downloadBtn.innerText = originalText;
+        alert('Could not download image. Please try again.');
+      });
+    }
+  </script>
 </body>
 </html>

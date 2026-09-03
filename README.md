@@ -1,9 +1,12 @@
 # User Profile Card Generator
 
-A form-based web application built with Node.js, Express, EJS, and SQLite. Form inputs are processed on the server and returned as dynamic profile cards with custom avatars, parsed skill badges, and social links.
+A form-based web application built with Node.js, Express, EJS, and SQLite. Features real-time dynamic preview as users type, server-side processing, customizable avatars, and dynamic profile card rendering with PNG export.
 
 ## Features
 
+- Real-time dynamic card preview while filling out the form on the left
+- One-click profile card download as PNG image
+- Expanded collection of 11 avatar styles (Robots, Friendly, Adventurer, Pixel Art, Fun Emoji, Notionists, Doodles, Minimalist, Thumbs, Initials, and Artistic)
 - Dynamic HTML card and avatar preview generation
 - Server-side form processing and string manipulation
 - Clean input formatting (title-casing, URL validation, skill parsing)
@@ -17,6 +20,7 @@ A form-based web application built with Node.js, Express, EJS, and SQLite. Form 
 - Express.js
 - EJS (Embedded JavaScript templates)
 - SQLite3
+- HTML5 Canvas / html2canvas
 - Vanilla CSS
 
 ## Getting Started Locally

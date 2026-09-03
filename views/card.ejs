@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= profile.name %> - Profile Card</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
   <header class="navbar">
@@ -26,11 +27,11 @@
         </div>
       <% } %>
 
-      <div class="profile-card">
+      <div id="downloadableCard" class="profile-card">
         <div class="card-banner"></div>
         <div class="card-body">
           <div class="avatar-container">
-            <img src="<%= profile.avatar %>" alt="<%= profile.name %>" class="card-avatar">
+            <img src="<%= profile.avatar %>" alt="<%= profile.name %>" class="card-avatar" crossorigin="anonymous">
           </div>
           
           <h1 class="card-name"><%= profile.name %></h1>
@@ -72,6 +73,7 @@
         <a href="/" class="btn btn-secondary">Create Another</a>
         <a href="/profiles" class="btn btn-outline">All Profiles</a>
         <button id="copyBtn" class="btn btn-primary" style="width: auto;" onclick="copyCardLink()">Share Link</button>
+        <button id="downloadBtn" class="btn btn-download" style="width: auto;" onclick="downloadProfileCard()">Download PNG</button>
       </div>
     </div>
   </main>
@@ -90,6 +92,29 @@
         setTimeout(function() {
           btn.innerText = originalText;
         }, 2000);
+      });
+    }
+
+    function downloadProfileCard() {
+      const card = document.getElementById('downloadableCard');
+      const btn = document.getElementById('downloadBtn');
+      const originalText = btn.innerText;
+      btn.innerText = 'Exporting...';
+
+      html2canvas(card, {
+        useCORS: true,
+        allowTaint: true,
+        scale: 2,
+        backgroundColor: null
+      }).then(function(canvas) {
+        const link = document.createElement('a');
+        link.download = '<%= profile.name.toLowerCase().replace(/\\s+/g, "-") %>-card.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        btn.innerText = originalText;
+      }).catch(function() {
+        btn.innerText = originalText;
+        alert('Could not export image. Please try again.');
       });
     }
   </script>
