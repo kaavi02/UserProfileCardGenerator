@@ -95,11 +95,32 @@
       });
     }
 
-    function downloadProfileCard() {
+    function convertImageToBase64(imgElement) {
+      return fetch(imgElement.src)
+        .then(res => res.blob())
+        .then(blob => {
+          return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+        })
+        .catch(() => imgElement.src);
+    }
+
+    async function downloadProfileCard() {
       const card = document.getElementById('downloadableCard');
       const btn = document.getElementById('downloadBtn');
+      const avatarImg = card.querySelector('.card-avatar');
       const originalText = btn.innerText;
+      const originalSrc = avatarImg ? avatarImg.src : '';
+
       btn.innerText = 'Exporting...';
+
+      if (avatarImg && originalSrc) {
+        const base64Data = await convertImageToBase64(avatarImg);
+        avatarImg.src = base64Data;
+      }
 
       html2canvas(card, {
         useCORS: true,
@@ -107,12 +128,18 @@
         scale: 2,
         backgroundColor: null
       }).then(function(canvas) {
+        if (avatarImg && originalSrc) {
+          avatarImg.src = originalSrc;
+        }
         const link = document.createElement('a');
         link.download = '<%= profile.name.toLowerCase().replace(/\\s+/g, "-") %>-card.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
         btn.innerText = originalText;
       }).catch(function() {
+        if (avatarImg && originalSrc) {
+          avatarImg.src = originalSrc;
+        }
         btn.innerText = originalText;
         alert('Could not export image. Please try again.');
       });

@@ -59,10 +59,10 @@ function generateAvatarUrl(name, style) {
   const chosenStyle = style || 'bottts';
 
   if (chosenStyle === 'initials') {
-    return `https://ui-avatars.com/api/?name=${seed}&background=6366f1&color=ffffff&bold=true&size=256`;
+    return `https://ui-avatars.com/api/?name=${seed}&background=6366f1&color=ffffff&bold=true&size=256&format=png`;
   }
 
-  return `https://api.dicebear.com/7.x/${chosenStyle}/svg?seed=${seed}`;
+  return `https://api.dicebear.com/7.x/${chosenStyle}/png?seed=${seed}&size=256`;
 }
 
 app.get('/', (req, res) => {

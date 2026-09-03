@@ -96,7 +96,7 @@
           <div class="card-banner"></div>
           <div class="card-body">
             <div class="avatar-container">
-              <img id="previewAvatar" src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=avatar" alt="Avatar Preview" class="card-avatar" crossorigin="anonymous">
+              <img id="previewAvatar" src="https://api.dicebear.com/7.x/fun-emoji/png?seed=avatar&size=256" alt="Avatar Preview" class="card-avatar" crossorigin="anonymous">
             </div>
             
             <h2 id="previewName" class="card-name">Your Name</h2>
@@ -199,9 +199,9 @@
       let finalAvatarUrl = '';
 
       if (styleValue === 'initials') {
-        finalAvatarUrl = 'https://ui-avatars.com/api/?name=' + activeSeed + '&background=6366f1&color=ffffff&bold=true&size=256';
+        finalAvatarUrl = 'https://ui-avatars.com/api/?name=' + activeSeed + '&background=6366f1&color=ffffff&bold=true&size=256&format=png';
       } else {
-        finalAvatarUrl = 'https://api.dicebear.com/7.x/' + styleValue + '/svg?seed=' + activeSeed;
+        finalAvatarUrl = 'https://api.dicebear.com/7.x/' + styleValue + '/png?seed=' + activeSeed + '&size=256';
       }
 
       previewAvatar.src = finalAvatarUrl;
@@ -242,11 +242,32 @@
 
     updateLivePreview();
 
-    function downloadCard(elementId, defaultFileName) {
+    function convertImageToBase64(imgElement) {
+      return fetch(imgElement.src)
+        .then(res => res.blob())
+        .then(blob => {
+          return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+        })
+        .catch(() => imgElement.src);
+    }
+
+    async function downloadCard(elementId, defaultFileName) {
       const cardElement = document.getElementById(elementId);
       const downloadBtn = document.getElementById('downloadPreviewBtn');
+      const avatarImg = cardElement.querySelector('.card-avatar');
       const originalText = downloadBtn.innerText;
+      const originalSrc = avatarImg ? avatarImg.src : '';
+
       downloadBtn.innerText = 'Exporting...';
+
+      if (avatarImg && originalSrc) {
+        const base64Data = await convertImageToBase64(avatarImg);
+        avatarImg.src = base64Data;
+      }
 
       html2canvas(cardElement, {
         useCORS: true,
@@ -254,12 +275,18 @@
         scale: 2,
         backgroundColor: null
       }).then(function(canvas) {
+        if (avatarImg && originalSrc) {
+          avatarImg.src = originalSrc;
+        }
         const imageLink = document.createElement('a');
         imageLink.download = (defaultFileName || 'profile-card') + '.png';
         imageLink.href = canvas.toDataURL('image/png');
         imageLink.click();
         downloadBtn.innerText = originalText;
       }).catch(function() {
+        if (avatarImg && originalSrc) {
+          avatarImg.src = originalSrc;
+        }
         downloadBtn.innerText = originalText;
         alert('Could not download image. Please try again.');
       });
