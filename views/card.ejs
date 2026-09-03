@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= profile.name %> - Profile Card</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="navbar">
+    <a href="/" class="brand">
+      <div class="brand-icon">P</div>
+      <span>ProfileGen</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/" class="nav-link">Create Card</a>
+      <a href="/profiles" class="nav-link">All Profiles</a>
+    </nav>
+  </header>
+
+  <main class="main-container">
+    <div class="profile-card-wrapper">
+      <% if (successMessage) { %>
+        <div class="alert-success">
+          <%= successMessage %>
+        </div>
+      <% } %>
+
+      <div class="profile-card">
+        <div class="card-banner"></div>
+        <div class="card-body">
+          <div class="avatar-container">
+            <img src="<%= profile.avatar %>" alt="<%= profile.name %>" class="card-avatar">
+          </div>
+          
+          <h1 class="card-name"><%= profile.name %></h1>
+          <p class="card-bio"><%= profile.bio %></p>
+
+          <% if (skills && skills.length > 0) { %>
+            <div class="section-label">Skills & Expertise</div>
+            <div class="skills-wrapper">
+              <% skills.forEach(function(skill) { %>
+                <span class="skill-tag"><%= skill %></span>
+              <% }); %>
+            </div>
+          <% } %>
+
+          <% if (profile.github || profile.linkedin || profile.portfolio) { %>
+            <div class="section-label">Connect</div>
+            <div class="social-links">
+              <% if (profile.github) { %>
+                <a href="<%= profile.github %>" target="_blank" rel="noopener noreferrer" class="social-btn">
+                  <span>GitHub</span>
+                </a>
+              <% } %>
+              <% if (profile.linkedin) { %>
+                <a href="<%= profile.linkedin %>" target="_blank" rel="noopener noreferrer" class="social-btn">
+                  <span>LinkedIn</span>
+                </a>
+              <% } %>
+              <% if (profile.portfolio) { %>
+                <a href="<%= profile.portfolio %>" target="_blank" rel="noopener noreferrer" class="social-btn">
+                  <span>Portfolio</span>
+                </a>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <a href="/" class="btn btn-secondary">Create Another</a>
+        <a href="/profiles" class="btn btn-outline">All Profiles</a>
+        <button id="copyBtn" class="btn btn-primary" style="width: auto;" onclick="copyCardLink()">Share Link</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>User Profile Card Generator &bull; Server-side form processing and dynamic rendering</p>
+  </footer>
+
+  <script>
+    function copyCardLink() {
+      const shareUrl = window.location.origin + '/profile/<%= profile.id %>';
+      navigator.clipboard.writeText(shareUrl).then(function() {
+        const btn = document.getElementById('copyBtn');
+        const originalText = btn.innerText;
+        btn.innerText = 'Copied!';
+        setTimeout(function() {
+          btn.innerText = originalText;
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

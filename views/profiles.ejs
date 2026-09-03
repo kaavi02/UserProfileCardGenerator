@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Profiles - ProfileGen</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="navbar">
+    <a href="/" class="brand">
+      <div class="brand-icon">P</div>
+      <span>ProfileGen</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/" class="nav-link">Create Card</a>
+      <a href="/profiles" class="nav-link">All Profiles</a>
+    </nav>
+  </header>
+
+  <main class="main-container">
+    <section class="hero">
+      <h1 class="hero-title">Created Profile Cards</h1>
+      <p class="hero-subtitle">Browse all generated user profile cards stored in the database.</p>
+    </section>
+
+    <% if (profiles && profiles.length > 0) { %>
+      <div class="gallery-grid">
+        <% profiles.forEach(function(profile) { %>
+          <div class="profile-card">
+            <div class="card-banner" style="height: 80px;"></div>
+            <div class="card-body" style="padding-bottom: 1.5rem;">
+              <div class="avatar-container" style="margin-top: -40px;">
+                <img src="<%= profile.avatar %>" alt="<%= profile.name %>" class="card-avatar" style="width: 80px; height: 80px;">
+              </div>
+              
+              <h2 class="card-name" style="font-size: 1.25rem;"><%= profile.name %></h2>
+              <p class="card-bio" style="font-size: 0.88rem; margin-bottom: 1rem;"><%= profile.bio %></p>
+
+              <% if (profile.parsedSkills && profile.parsedSkills.length > 0) { %>
+                <div class="skills-wrapper" style="margin-bottom: 1rem;">
+                  <% profile.parsedSkills.slice(0, 3).forEach(function(skill) { %>
+                    <span class="skill-tag" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;"><%= skill %></span>
+                  <% }); %>
+                  <% if (profile.parsedSkills.length > 3) { %>
+                    <span class="skill-tag" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; background: #f1f5f9; color: #64748b; border-color: #e2e8f0;">
+                      +<%= profile.parsedSkills.length - 3 %>
+                    </span>
+                  <% } %>
+                </div>
+              <% } %>
+
+              <a href="/profile/<%= profile.id %>" class="btn btn-outline" style="width: 100%; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                View Card
+              </a>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <div style="text-align: center; padding: 4rem 1rem; background: white; border-radius: 16px; border: 1px solid #e2e8f0;">
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #334155;">No profiles saved yet</h3>
+        <p style="color: #64748b; margin-bottom: 1.5rem;">Generate your first profile card to see it displayed here.</p>
+        <a href="/" class="btn btn-primary" style="width: auto;">Create First Profile</a>
+      </div>
+    <% } %>
+  </main>
+
+  <footer class="footer">
+    <p>User Profile Card Generator &bull; Server-side form processing and dynamic rendering</p>
+  </footer>
+</body>
+</html>
