@@ -55,7 +55,7 @@ function formatUrl(url, platform) {
 }
 
 function generateAvatarUrl(name, style) {
-  const seed = encodeURIComponent(name || 'user');
+  const seed = encodeURIComponent((name || 'avatar').toLowerCase().trim());
   const chosenStyle = style || 'bottts';
 
   if (chosenStyle === 'initials') {
@@ -82,6 +82,7 @@ app.post('/generate', (req, res) => {
   const rawLinkedin = req.body.linkedin || '';
   const rawPortfolio = req.body.portfolio || '';
   const avatarStyle = req.body.avatarStyle || 'bottts';
+  const customAvatar = req.body.avatarUrl ? req.body.avatarUrl.trim() : '';
 
   const formattedName = formatName(rawName);
   const cleanBio = rawBio.trim() || 'No bio provided.';
@@ -89,7 +90,7 @@ app.post('/generate', (req, res) => {
   const formattedGithub = formatUrl(rawGithub, 'github');
   const formattedLinkedin = formatUrl(rawLinkedin, 'linkedin');
   const formattedPortfolio = formatUrl(rawPortfolio, 'portfolio');
-  const avatarUrl = generateAvatarUrl(formattedName, avatarStyle);
+  const avatarUrl = customAvatar || generateAvatarUrl(formattedName, avatarStyle);
 
   const profileData = {
     name: formattedName,

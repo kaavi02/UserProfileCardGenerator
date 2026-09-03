@@ -28,6 +28,8 @@
     <div class="grid-layout">
       <div class="form-card">
         <form action="/generate" method="POST" id="profileForm">
+          <input type="hidden" id="avatarUrlInput" name="avatarUrl" value="">
+
           <div class="form-group">
             <label for="name" class="form-label">Full Name</label>
             <input type="text" id="name" name="name" class="form-input" placeholder="e.g. Jane Doe" required autocomplete="off">
@@ -46,19 +48,22 @@
 
           <div class="form-group">
             <label for="avatarStyle" class="form-label">Avatar Style</label>
-            <select id="avatarStyle" name="avatarStyle" class="form-select">
-              <option value="bottts">Robots (Bottts)</option>
-              <option value="avataaars">Friendly Avatars</option>
-              <option value="lorelei">Artistic (Lorelei)</option>
-              <option value="adventurer">Adventurer RPG</option>
-              <option value="pixel-art">Pixel Art Characters</option>
-              <option value="fun-emoji">Fun Emoji</option>
-              <option value="notionists">Notion Sketch</option>
-              <option value="croodles">Hand Doodles</option>
-              <option value="micah">Modern Minimalist</option>
-              <option value="thumbs">Thumbs Expressions</option>
-              <option value="initials">Initials Badge</option>
-            </select>
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="avatarStyle" name="avatarStyle" class="form-select">
+                <option value="fun-emoji">Fun Emoji</option>
+                <option value="bottts">Robots (Bottts)</option>
+                <option value="avataaars">Friendly Avatars</option>
+                <option value="lorelei">Artistic (Lorelei)</option>
+                <option value="adventurer">Adventurer RPG</option>
+                <option value="pixel-art">Pixel Art Characters</option>
+                <option value="notionists">Notion Sketch</option>
+                <option value="croodles">Hand Doodles</option>
+                <option value="micah">Modern Minimalist</option>
+                <option value="thumbs">Thumbs Expressions</option>
+                <option value="initials">Initials Badge</option>
+              </select>
+              <button type="button" id="shuffleBtn" class="btn btn-secondary" style="white-space: nowrap; font-size: 0.88rem; padding: 0 1rem;" onclick="shuffleAvatarSeed()">Randomize</button>
+            </div>
           </div>
 
           <div class="form-group">
@@ -91,7 +96,7 @@
           <div class="card-banner"></div>
           <div class="card-body">
             <div class="avatar-container">
-              <img id="previewAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=preview" alt="Avatar Preview" class="card-avatar" crossorigin="anonymous">
+              <img id="previewAvatar" src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=avatar" alt="Avatar Preview" class="card-avatar" crossorigin="anonymous">
             </div>
             
             <h2 id="previewName" class="card-name">Your Name</h2>
@@ -149,6 +154,7 @@
     const githubInput = document.getElementById('github');
     const linkedinInput = document.getElementById('linkedin');
     const portfolioInput = document.getElementById('portfolio');
+    const avatarUrlInput = document.getElementById('avatarUrlInput');
 
     const previewName = document.getElementById('previewName');
     const previewBio = document.getElementById('previewBio');
@@ -158,8 +164,27 @@
     const previewLinkedin = document.getElementById('previewLinkedin');
     const previewPortfolio = document.getElementById('previewPortfolio');
 
+    let currentCustomSeed = null;
+
+    function formatClientName(text) {
+      if (!text) return '';
+      return text
+        .trim()
+        .toLowerCase()
+        .split(' ')
+        .filter(Boolean)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+
+    function shuffleAvatarSeed() {
+      currentCustomSeed = 'face_' + Math.random().toString(36).substring(2, 8);
+      updateLivePreview();
+    }
+
     function updateLivePreview() {
-      const nameValue = nameInput.value.trim();
+      const rawName = nameInput.value;
+      const formatted = formatClientName(rawName);
       const bioValue = bioInput.value.trim();
       const skillsValue = skillsInput.value.trim();
       const styleValue = avatarSelect.value;
@@ -167,26 +192,20 @@
       const linkedinValue = linkedinInput.value.trim();
       const portfolioValue = portfolioInput.value.trim();
 
-      if (nameValue) {
-        const titleCased = nameValue
-          .toLowerCase()
-          .split(' ')
-          .filter(Boolean)
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        previewName.textContent = titleCased;
-      } else {
-        previewName.textContent = 'Your Name';
-      }
-
+      previewName.textContent = formatted || 'Your Name';
       previewBio.textContent = bioValue || 'Your bio and tagline will dynamically display here as you type.';
 
-      const seed = encodeURIComponent(nameValue || 'preview');
+      const activeSeed = encodeURIComponent(currentCustomSeed || (formatted || 'avatar').toLowerCase().trim());
+      let finalAvatarUrl = '';
+
       if (styleValue === 'initials') {
-        previewAvatar.src = 'https://ui-avatars.com/api/?name=' + seed + '&background=6366f1&color=ffffff&bold=true&size=256';
+        finalAvatarUrl = 'https://ui-avatars.com/api/?name=' + activeSeed + '&background=6366f1&color=ffffff&bold=true&size=256';
       } else {
-        previewAvatar.src = 'https://api.dicebear.com/7.x/' + styleValue + '/svg?seed=' + seed;
+        finalAvatarUrl = 'https://api.dicebear.com/7.x/' + styleValue + '/svg?seed=' + activeSeed;
       }
+
+      previewAvatar.src = finalAvatarUrl;
+      avatarUrlInput.value = finalAvatarUrl;
 
       previewSkills.innerHTML = '';
       if (skillsValue) {
@@ -210,13 +229,18 @@
       previewPortfolio.style.display = portfolioValue ? 'inline-flex' : 'none';
     }
 
-    nameInput.addEventListener('input', updateLivePreview);
+    nameInput.addEventListener('input', function() {
+      currentCustomSeed = null;
+      updateLivePreview();
+    });
     bioInput.addEventListener('input', updateLivePreview);
     skillsInput.addEventListener('input', updateLivePreview);
     avatarSelect.addEventListener('change', updateLivePreview);
     githubInput.addEventListener('input', updateLivePreview);
     linkedinInput.addEventListener('input', updateLivePreview);
     portfolioInput.addEventListener('input', updateLivePreview);
+
+    updateLivePreview();
 
     function downloadCard(elementId, defaultFileName) {
       const cardElement = document.getElementById(elementId);
