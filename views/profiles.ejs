@@ -24,10 +24,10 @@
       <p class="hero-subtitle">Browse all generated user profile cards stored in the database.</p>
     </section>
 
-    <% if (profiles && profiles.length > 0) { %>
-      <div class="gallery-grid">
+    <div id="galleryGrid" class="gallery-grid">
+      <% if (profiles && profiles.length > 0) { %>
         <% profiles.forEach(function(profile) { %>
-          <div class="profile-card">
+          <div class="profile-card" data-card-key="<%= profile.email || profile.id %>">
             <div class="card-banner" style="height: 80px;"></div>
             <div class="card-body" style="padding-bottom: 1.5rem;">
               <div class="avatar-container" style="margin-top: -40px;">
@@ -35,6 +35,9 @@
               </div>
               
               <h2 class="card-name" style="font-size: 1.25rem;"><%= profile.name %></h2>
+              <% if (profile.email) { %>
+                <p style="font-size: 0.8rem; color: #6366f1; margin-bottom: 0.4rem; font-weight: 500;"><%= profile.email %></p>
+              <% } %>
               <p class="card-bio" style="font-size: 0.88rem; margin-bottom: 1rem;"><%= profile.bio %></p>
 
               <% if (profile.parsedSkills && profile.parsedSkills.length > 0) { %>
@@ -50,24 +53,61 @@
                 </div>
               <% } %>
 
-              <a href="/profile/<%= profile.id %>" class="btn btn-outline" style="width: 100%; font-size: 0.9rem; padding: 0.5rem 1rem;">
+              <a href="/profile/<%= encodeURIComponent(profile.email || profile.id) %>" class="btn btn-outline" style="width: 100%; font-size: 0.9rem; padding: 0.5rem 1rem;">
                 View Card
               </a>
             </div>
           </div>
         <% }); %>
-      </div>
-    <% } else { %>
-      <div style="text-align: center; padding: 4rem 1rem; background: white; border-radius: 16px; border: 1px solid #e2e8f0;">
-        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #334155;">No profiles saved yet</h3>
-        <p style="color: #64748b; margin-bottom: 1.5rem;">Generate your first profile card to see it displayed here.</p>
-        <a href="/" class="btn btn-primary" style="width: auto;">Create First Profile</a>
-      </div>
-    <% } %>
+      <% } %>
+    </div>
   </main>
 
   <footer class="footer">
     <p>User Profile Card Generator &bull; Server-side form processing and dynamic rendering</p>
   </footer>
+
+  <script>
+    try {
+      const localData = JSON.parse(localStorage.getItem('stored_user_profiles') || '[]');
+      if (Array.isArray(localData) && localData.length > 0) {
+        const grid = document.getElementById('galleryGrid');
+        localData.forEach(item => {
+          const key = item.email || item.id;
+          const exists = grid.querySelector('[data-card-key="' + key + '"]');
+          if (!exists) {
+            let skillsArr = [];
+            try {
+              skillsArr = JSON.parse(item.skills);
+            } catch (e) {
+              skillsArr = [];
+            }
+            let skillsHtml = '';
+            if (skillsArr.length > 0) {
+              skillsHtml = '<div class="skills-wrapper" style="margin-bottom: 1rem;">' +
+                skillsArr.slice(0, 3).map(s => '<span class="skill-tag" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">' + s + '</span>').join('') +
+                '</div>';
+            }
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'profile-card';
+            cardDiv.setAttribute('data-card-key', key);
+            cardDiv.innerHTML = '<div class="card-banner" style="height: 80px;"></div>' +
+              '<div class="card-body" style="padding-bottom: 1.5rem;">' +
+                '<div class="avatar-container" style="margin-top: -40px;">' +
+                  '<img src="' + item.avatar + '" alt="' + item.name + '" class="card-avatar" style="width: 80px; height: 80px;">' +
+                '</div>' +
+                '<h2 class="card-name" style="font-size: 1.25rem;">' + item.name + '</h2>' +
+                (item.email ? '<p style="font-size: 0.8rem; color: #6366f1; margin-bottom: 0.4rem; font-weight: 500;">' + item.email + '</p>' : '') +
+                '<p class="card-bio" style="font-size: 0.88rem; margin-bottom: 1rem;">' + item.bio + '</p>' +
+                skillsHtml +
+                '<a href="/profile/' + encodeURIComponent(key) + '" class="btn btn-outline" style="width: 100%; font-size: 0.9rem; padding: 0.5rem 1rem;">View Card</a>' +
+              '</div>';
+            grid.prepend(cardDiv);
+          }
+        });
+      }
+    } catch (e) {
+    }
+  </script>
 </body>
 </html>

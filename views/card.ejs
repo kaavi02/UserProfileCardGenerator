@@ -35,6 +35,9 @@
           </div>
           
           <h1 class="card-name"><%= profile.name %></h1>
+          <% if (profile.email) { %>
+            <div style="font-size: 0.85rem; color: #6366f1; font-weight: 600; margin-bottom: 0.4rem;"><%= profile.email %></div>
+          <% } %>
           <p class="card-bio"><%= profile.bio %></p>
 
           <% if (skills && skills.length > 0) { %>
@@ -46,9 +49,14 @@
             </div>
           <% } %>
 
-          <% if (profile.github || profile.linkedin || profile.portfolio) { %>
+          <% if (profile.email || profile.github || profile.linkedin || profile.portfolio) { %>
             <div class="section-label">Connect</div>
             <div class="social-links">
+              <% if (profile.email) { %>
+                <a href="mailto:<%= profile.email %>" class="social-btn">
+                  <span>Email</span>
+                </a>
+              <% } %>
               <% if (profile.github) { %>
                 <a href="<%= profile.github %>" target="_blank" rel="noopener noreferrer" class="social-btn">
                   <span>GitHub</span>
@@ -83,8 +91,32 @@
   </footer>
 
   <script>
+    const savedCardData = {
+      id: <%= profile.id %>,
+      name: <%- JSON.stringify(profile.name) %>,
+      email: <%- JSON.stringify(profile.email || '') %>,
+      bio: <%- JSON.stringify(profile.bio) %>,
+      skills: <%- JSON.stringify(profile.skills) %>,
+      github: <%- JSON.stringify(profile.github || '') %>,
+      linkedin: <%- JSON.stringify(profile.linkedin || '') %>,
+      portfolio: <%- JSON.stringify(profile.portfolio || '') %>,
+      avatar: <%- JSON.stringify(profile.avatar) %>
+    };
+
+    try {
+      let storedList = JSON.parse(localStorage.getItem('stored_user_profiles') || '[]');
+      storedList = storedList.filter(item => {
+        if (savedCardData.email && item.email === savedCardData.email) return false;
+        return item.id !== savedCardData.id;
+      });
+      storedList.unshift(savedCardData);
+      localStorage.setItem('stored_user_profiles', JSON.stringify(storedList));
+    } catch (e) {
+    }
+
     function copyCardLink() {
-      const shareUrl = window.location.origin + '/profile/<%= profile.id %>';
+      const cardKey = savedCardData.email || savedCardData.id;
+      const shareUrl = window.location.origin + '/profile/' + encodeURIComponent(cardKey);
       navigator.clipboard.writeText(shareUrl).then(function() {
         const btn = document.getElementById('copyBtn');
         const originalText = btn.innerText;

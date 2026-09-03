@@ -36,6 +36,12 @@
           </div>
 
           <div class="form-group">
+            <label for="email" class="form-label">Email Address (Unique Card Key)</label>
+            <input type="email" id="email" name="email" class="form-input" placeholder="e.g. jane@example.com" required autocomplete="off">
+            <div class="form-help">Your profile is saved under your email so it stays permanently accessible</div>
+          </div>
+
+          <div class="form-group">
             <label for="bio" class="form-label">Bio / Tagline</label>
             <textarea id="bio" name="bio" class="form-textarea" placeholder="A brief description about yourself, passions, or current role" required></textarea>
           </div>
@@ -77,7 +83,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary">Save & Generate Server Card</button>
+          <button type="submit" class="btn btn-primary">Save Profile by Email</button>
         </form>
       </div>
 
@@ -100,6 +106,7 @@
             </div>
             
             <h2 id="previewName" class="card-name">Your Name</h2>
+            <p id="previewEmailText" style="font-size: 0.84rem; color: #6366f1; margin-bottom: 0.4rem; font-weight: 500; display: none;"></p>
             <p id="previewBio" class="card-bio">Your bio and tagline will dynamically display here as you type.</p>
 
             <div class="section-label">Skills & Expertise</div>
@@ -110,6 +117,7 @@
 
             <div class="section-label">Connect</div>
             <div id="previewSocials" class="social-links">
+              <span id="previewEmailBtn" class="social-btn" style="display: none;">Email</span>
               <span id="previewGithub" class="social-btn" style="display: none;">GitHub</span>
               <span id="previewLinkedin" class="social-btn" style="display: none;">LinkedIn</span>
               <span id="previewPortfolio" class="social-btn" style="display: none;">Portfolio</span>
@@ -119,21 +127,19 @@
 
         <div class="side-panel">
           <h3 class="side-title">Recent Profiles</h3>
-          <% if (recentProfiles && recentProfiles.length > 0) { %>
-            <div class="mini-profile-list">
+          <div id="recentProfilesList" class="mini-profile-list">
+            <% if (recentProfiles && recentProfiles.length > 0) { %>
               <% recentProfiles.forEach(function(item) { %>
-                <a href="/profile/<%= item.id %>" class="mini-card">
+                <a href="/profile/<%= item.id %>" class="mini-card" data-profile-id="<%= item.id %>">
                   <img src="<%= item.avatar %>" alt="<%= item.name %>" class="mini-avatar">
                   <div class="mini-info">
                     <h4><%= item.name %></h4>
-                    <p><%= item.bio %></p>
+                    <p><%= item.email || item.bio %></p>
                   </div>
                 </a>
               <% }); %>
-            </div>
-          <% } else { %>
-            <p style="color: #64748b; font-size: 0.85rem;">No saved profiles yet.</p>
-          <% } %>
+            <% } %>
+          </div>
           <div style="margin-top: 1rem;">
             <a href="/profiles" class="btn btn-outline" style="width: 100%; text-align: center; font-size: 0.88rem; padding: 0.5rem 1rem;">View All Stored Cards</a>
           </div>
@@ -148,6 +154,7 @@
 
   <script>
     const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
     const bioInput = document.getElementById('bio');
     const skillsInput = document.getElementById('skills');
     const avatarSelect = document.getElementById('avatarStyle');
@@ -157,9 +164,11 @@
     const avatarUrlInput = document.getElementById('avatarUrlInput');
 
     const previewName = document.getElementById('previewName');
+    const previewEmailText = document.getElementById('previewEmailText');
     const previewBio = document.getElementById('previewBio');
     const previewSkills = document.getElementById('previewSkills');
     const previewAvatar = document.getElementById('previewAvatar');
+    const previewEmailBtn = document.getElementById('previewEmailBtn');
     const previewGithub = document.getElementById('previewGithub');
     const previewLinkedin = document.getElementById('previewLinkedin');
     const previewPortfolio = document.getElementById('previewPortfolio');
@@ -184,6 +193,7 @@
 
     function updateLivePreview() {
       const rawName = nameInput.value;
+      const emailValue = emailInput.value.trim();
       const formatted = formatClientName(rawName);
       const bioValue = bioInput.value.trim();
       const skillsValue = skillsInput.value.trim();
@@ -193,6 +203,16 @@
       const portfolioValue = portfolioInput.value.trim();
 
       previewName.textContent = formatted || 'Your Name';
+
+      if (emailValue) {
+        previewEmailText.textContent = emailValue;
+        previewEmailText.style.display = 'block';
+        previewEmailBtn.style.display = 'inline-flex';
+      } else {
+        previewEmailText.style.display = 'none';
+        previewEmailBtn.style.display = 'none';
+      }
+
       previewBio.textContent = bioValue || 'Your bio and tagline will dynamically display here as you type.';
 
       const activeSeed = encodeURIComponent(currentCustomSeed || (formatted || 'avatar').toLowerCase().trim());
@@ -233,6 +253,7 @@
       currentCustomSeed = null;
       updateLivePreview();
     });
+    emailInput.addEventListener('input', updateLivePreview);
     bioInput.addEventListener('input', updateLivePreview);
     skillsInput.addEventListener('input', updateLivePreview);
     avatarSelect.addEventListener('change', updateLivePreview);
@@ -241,6 +262,28 @@
     portfolioInput.addEventListener('input', updateLivePreview);
 
     updateLivePreview();
+
+    function syncClientStorage() {
+      try {
+        const localData = JSON.parse(localStorage.getItem('stored_user_profiles') || '[]');
+        if (Array.isArray(localData) && localData.length > 0) {
+          const container = document.getElementById('recentProfilesList');
+          localData.slice(0, 4).forEach(item => {
+            const existing = container.querySelector('[data-profile-id="' + item.id + '"]');
+            if (!existing) {
+              const cardAnchor = document.createElement('a');
+              cardAnchor.href = '/profile/' + encodeURIComponent(item.email || item.id);
+              cardAnchor.className = 'mini-card';
+              cardAnchor.setAttribute('data-profile-id', item.id);
+              cardAnchor.innerHTML = '<img src="' + item.avatar + '" alt="' + item.name + '" class="mini-avatar"><div class="mini-info"><h4>' + item.name + '</h4><p>' + (item.email || item.bio) + '</p></div>';
+              container.prepend(cardAnchor);
+            }
+          });
+        }
+      } catch (e) {
+      }
+    }
+    syncClientStorage();
 
     function convertImageToBase64(imgElement) {
       return fetch(imgElement.src)

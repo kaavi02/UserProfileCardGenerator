@@ -70,12 +70,13 @@ app.get('/', (req, res) => {
     if (err) {
       return res.render('index', { recentProfiles: [] });
     }
-    res.render('index', { recentProfiles: profiles ? profiles.slice(0, 3) : [] });
+    res.render('index', { recentProfiles: profiles ? profiles.slice(0, 4) : [] });
   });
 });
 
 app.post('/generate', (req, res) => {
   const rawName = req.body.name || '';
+  const rawEmail = req.body.email || '';
   const rawBio = req.body.bio || '';
   const rawSkills = req.body.skills || '';
   const rawGithub = req.body.github || '';
@@ -85,6 +86,7 @@ app.post('/generate', (req, res) => {
   const customAvatar = req.body.avatarUrl ? req.body.avatarUrl.trim() : '';
 
   const formattedName = formatName(rawName);
+  const cleanEmail = rawEmail.trim().toLowerCase();
   const cleanBio = rawBio.trim() || 'No bio provided.';
   const skillList = parseSkills(rawSkills);
   const formattedGithub = formatUrl(rawGithub, 'github');
@@ -94,6 +96,7 @@ app.post('/generate', (req, res) => {
 
   const profileData = {
     name: formattedName,
+    email: cleanEmail,
     bio: cleanBio,
     skills: JSON.stringify(skillList),
     github: formattedGithub,
