@@ -176,7 +176,7 @@ app.get('/api/profiles', (req, res) => {
   });
 });
 
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+if (require.main === module) {
   app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
   });

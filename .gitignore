@@ -2,4 +2,5 @@ node_modules
 npm-debug.log
 .env
 profiles.db
+profiles.json
 .DS_Store
